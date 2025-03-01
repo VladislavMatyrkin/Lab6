@@ -3,33 +3,39 @@ package bsu.rfe.java.group6.lab6.matyrkin.var7B;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.ArrayList;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 @SuppressWarnings("serial")
 public class Field extends JPanel {
-    // Флаг приостановленности движения
-    private boolean paused;
+
+    private boolean paused;// Флаг, который указывает, приостановлено ли движение
+    private boolean charismaEnabled = false; // Флаг для режима "харизма"
+    private Point charismaPoint = new Point();
     // Динамический список скачущих мячей
-    private ArrayList<BouncingBall> balls = new ArrayList<BouncingBall>(10);
+    private ArrayList<BouncingBall> balls = new ArrayList<>(10);
     // Класс таймер отвечает за регулярную генерацию событий ActionEvent
 // При создании его экземпляра используется анонимный класс,
 // реализующий интерфейс ActionListener
-    private Timer repaintTimer = new Timer(10, new ActionListener() {
-        public void actionPerformed(ActionEvent ev) {
-// Задача обработчика события ActionEvent - перерисовка окна
-            repaint();
-        }
-    });
+    private Timer repaintTimer = new Timer(10, ev -> repaint());
     // Конструктор класса BouncingBall
     public Field() {
-// Установить цвет заднего фона белым
         setBackground(Color.WHITE);
-// Запустить таймер
+// Запускаем таймер для обновления поля
         repaintTimer.start();
+        // Добавляем обработчик движения мыши:
+        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                charismaPoint = e.getPoint(); // Обновляем координаты курсора, когда он перемещается.
+            }
+        });
     }
+
     // Унаследованный от JPanel метод перерисовки компонента
     public void paintComponent(Graphics g) {
 // Вызвать версию метода, унаследованную от предка
@@ -63,6 +69,18 @@ public class Field extends JPanel {
     }
     // Синхронизированный метод проверки, может ли мяч двигаться
 // (не включен ли режим паузы?)
+    public synchronized void setCharismaEnabled(boolean enabled) {
+        charismaEnabled = enabled;
+    }
+    // Проверка, включен ли режим "харизма"
+    public synchronized boolean isCharismaEnabled() {
+        return charismaEnabled;
+    }
+    // Получение текущей позиции курсора
+    public synchronized Point getCharismaPoint() {
+        return charismaPoint;
+    }
+    // Проверка, можно ли двигаться мячу (если пауза, то поток мяча засыпает)
     public synchronized void canMove(BouncingBall ball) throws
             InterruptedException {
         if (paused) {
